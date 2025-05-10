@@ -25,4 +25,8 @@ public class RouteGuideUtil {
             }
         }
     }
+
+    public static boolean exists(Feature feature) {
+        return feature != null && !feature.getName().isEmpty();
+    }
 }
