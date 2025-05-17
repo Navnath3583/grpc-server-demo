@@ -15,7 +15,7 @@ import java.util.Iterator;
 @AllArgsConstructor
 public class RouteGuideServerStreaming {
 
-    private RouteGuideClient routeGuideClient;
+    private RouteGuideClient routeGuideClientImpl;
 
     /*public void getFeatures(RouteGuideRequest routeGuideRequest) {
         Rectangle request =
@@ -41,7 +41,7 @@ public class RouteGuideServerStreaming {
                         .setHi(Point.newBuilder().setLatitude(0).setLongitude(0).build()).build();
         Iterator<Feature> features;
         try {
-            routeGuideClient.getAsyncStub().listFeatures(request, new StreamObserver<Feature>() {
+            routeGuideClientImpl.getAsyncStub().listFeatures(request, new StreamObserver<Feature>() {
                 @Override
                 public void onNext(Feature feature) {
                     System.out.println("Feature-->" + feature);

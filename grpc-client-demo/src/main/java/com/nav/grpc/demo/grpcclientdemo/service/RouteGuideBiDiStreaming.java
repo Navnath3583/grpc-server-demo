@@ -4,7 +4,7 @@ import com.nav.grpc.demo.grpcclientdemo.client.RouteGuideClient;
 import com.nav.grpc.demo.grpcclientdemo.model.RouteGuideRequest;
 import com.nav.grpc.demo.msg.Point;
 import com.nav.grpc.demo.msg.RouteNote;
-import com.nav.grpc.demo.msg.RouteSummary;
+import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,12 +15,12 @@ import java.util.concurrent.CountDownLatch;
 @AllArgsConstructor
 public class RouteGuideBiDiStreaming {
 
-    private RouteGuideClient routeGuideClient;
+    private RouteGuideClient routeGuideClientImpl;
 
     public void getFeatures(RouteGuideRequest routeGuideRequest) {
         final CountDownLatch finishLatch = new CountDownLatch(1);
-        StreamObserver<RouteNote> requestObserver =
-                routeGuideClient.getAsyncStub().routeChat(new StreamObserver<RouteNote>() {
+        ClientCallStreamObserver<RouteNote> requestObserver =
+                (ClientCallStreamObserver<RouteNote>) routeGuideClientImpl.getAsyncStub().routeChat(new StreamObserver<RouteNote>() {
                     @Override
                     public void onNext(RouteNote note) {
                         System.out.println("Got message {" + note.getMessage() + "}" + " at {" +
@@ -51,13 +51,20 @@ public class RouteGuideBiDiStreaming {
             requestObserver.onError(e);
             throw e;
         }
+        // Mark the end of requests
+        requestObserver.onCompleted();
         try {
-            Thread.sleep(60000);
+            Thread.sleep(250); // Do some work
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+
+        //requestObserver.cancel("I am done", null);
+        try {
+            Thread.sleep(100); // Make logs more obvious. Cancel is async
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        // Mark the end of requests
-        requestObserver.onCompleted();
     }
 
     private RouteNote newNote(String message, int lat, int lon) {

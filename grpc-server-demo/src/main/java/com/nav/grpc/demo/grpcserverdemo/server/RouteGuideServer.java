@@ -2,20 +2,25 @@ package com.nav.grpc.demo.grpcserverdemo.server;
 
 import com.nav.grpc.demo.grpcserverdemo.service.RouteGuideService;
 import io.grpc.*;
-import lombok.AllArgsConstructor;
+import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.protobuf.services.HealthStatusManager;
+import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@AllArgsConstructor
 @Component
 public class RouteGuideServer {
+    @Value("${grpc.server.port}")
+    private int serverPort;
+
+    @Autowired
     private RouteGuideService routeGuideService;
 
     public void start() throws IOException, InterruptedException {
@@ -26,18 +31,31 @@ public class RouteGuideServer {
                 .clientAuth(TlsServerCredentials.ClientAuth.REQUIRE)
                 .build();
 
-        Server server = Grpc.newServerBuilderForPort(50051, serverCredentials)
+        HealthStatusManager healthStatusManager = new HealthStatusManager();
+        Server server = Grpc.newServerBuilderForPort(this.serverPort, serverCredentials)
                 .addService(routeGuideService)
-                .intercept(new JwtServerInterceptor())
-                .build();
-        server.start();
-        log.info("Server started, listening on " + 50051);
-        blockUntilShutdown(server);
-    }
+                .addService(ProtoReflectionServiceV1.newInstance())
+                .addService(healthStatusManager.getHealthService())
+                //.intercept(new JwtServerInterceptor())
+                .build()
+                .start();
+        log.info("Server started, listening on " + this.serverPort);
 
-    private void blockUntilShutdown(Server server) throws InterruptedException {
-        if (server != null) {
-            server.awaitTermination();
-        }
+        /*
+        Code to handle Graceful Shutdown of server. Server will wait for 30 seconds to all RPC to complete.
+         */
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            //Start graceful shutdown
+            server.shutdown();
+            try {
+                //Wait for 30 seconds for RPC's to get complete
+                server.awaitTermination(30, TimeUnit.SECONDS);
+            } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            server.shutdownNow();
+        }));
+        healthStatusManager.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
+        server.awaitTermination();
     }
 }

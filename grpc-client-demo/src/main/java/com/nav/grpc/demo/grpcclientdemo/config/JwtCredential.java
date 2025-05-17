@@ -1,5 +1,6 @@
-package com.nav.grpc.demo.grpcclientdemo.client;
+package com.nav.grpc.demo.grpcclientdemo.config;
 
+import com.nav.grpc.demo.grpcclientdemo.constant.Constant;
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 import io.grpc.Status;
@@ -15,7 +16,7 @@ public class JwtCredential extends CallCredentials {
 
     private final String subject;
 
-    JwtCredential(String subject) {
+    public JwtCredential(String subject) {
         this.subject = subject;
     }
 

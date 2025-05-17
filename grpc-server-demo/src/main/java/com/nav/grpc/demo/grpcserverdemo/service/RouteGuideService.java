@@ -1,8 +1,15 @@
 package com.nav.grpc.demo.grpcserverdemo.service;
 
+import com.google.rpc.DebugInfo;
 import com.nav.grpc.demo.grpcserverdemo.util.RouteGuideUtil;
 import com.nav.grpc.demo.msg.*;
+import io.grpc.Metadata;
+import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
+import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,6 +21,18 @@ import java.util.concurrent.ConcurrentMap;
 
 @Service
 public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
+    @Autowired
+    private ApplicationContext context;
+    private static final Metadata.Key<DebugInfo> DEBUG_INFO_TRAILER_KEY =
+            ProtoUtils.keyForProto(DebugInfo.getDefaultInstance());
+    public static final DebugInfo DEBUG_INFO =
+            DebugInfo.newBuilder()
+                    .addStackEntries("stack_entry_1")
+                    .addStackEntries("stack_entry_2")
+                    .addStackEntries("stack_entry_3")
+                    .setDetail("detailed error info").build();
+    private static final String DEBUG_DESC = "detailed error description";
+
     List<Feature> features;
     private final ConcurrentMap<Point, List<RouteNote>> routeNotes =
             new ConcurrentHashMap<>();
@@ -24,8 +43,38 @@ public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
 
     @Override
     public void getFeature(Point request, StreamObserver<Feature> responseObserver) {
-        responseObserver.onNext(this.features.getFirst());
-        responseObserver.onCompleted();
+        ServerCallStreamObserver serverCallStreamObserver = (ServerCallStreamObserver) responseObserver;
+        serverCallStreamObserver.setOnCancelHandler(() -> {
+            System.out.println("Client Cancelled the RPC");
+        });
+        //codeToValidateGracefulShutdown();
+        //testExceptionScenario(responseObserver, serverCallStreamObserver);
+        System.out.println("<---- Server received request--->");
+        serverCallStreamObserver.onNext(this.features.getFirst());
+        serverCallStreamObserver.onCompleted();
+    }
+
+    private static void codeToValidateGracefulShutdown() {
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                System.out.println("<----------------------System is exiting------------------------>");
+                System.exit(129);
+            }
+        };
+        thread.start();
+        try {
+            Thread.sleep(45000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void testExceptionScenario(StreamObserver<Feature> responseObserver, ServerCallStreamObserver serverCallStreamObserver) {
+        Metadata trailers = new Metadata();
+        trailers.put(DEBUG_INFO_TRAILER_KEY, DEBUG_INFO);
+        responseObserver.onError(Status.INTERNAL.withDescription(DEBUG_DESC)
+                .asRuntimeException(trailers));
     }
 
     @Override
@@ -62,7 +111,8 @@ public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
 
             @Override
             public void onError(Throwable t) {
-                t.printStackTrace();
+                responseObserver.onError(Status.INTERNAL.withDescription("Server Error")
+                        .asRuntimeException());
             }
 
             @Override
@@ -77,6 +127,10 @@ public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
 
     @Override
     public StreamObserver<RouteNote> routeChat(StreamObserver<RouteNote> responseObserver) {
+        ServerCallStreamObserver serverCallStreamObserver = (ServerCallStreamObserver) responseObserver;
+        serverCallStreamObserver.setOnCancelHandler(() -> {
+            System.out.println("BiDi RPC Cancelled");
+        });
         return new StreamObserver<RouteNote>() {
             @Override
             public void onNext(RouteNote routeNote) {
@@ -87,16 +141,17 @@ public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
                         .setMessage("Server Response")
                         .setLocation(Point.newBuilder().setLatitude(10)
                                 .setLongitude(10).build()).build());
-                for (RouteNote prevNote : notes.toArray(new RouteNote[0])) {
+                /*for (RouteNote prevNote : notes.toArray(new RouteNote[0])) {
                     responseObserver.onNext(prevNote);
-                }
+                }*/
                 // Now add the new note to the list
                 notes.add(routeNote);
             }
 
             @Override
             public void onError(Throwable throwable) {
-                throwable.printStackTrace();
+                responseObserver.onError(Status.INTERNAL.withDescription("Server Error")
+                        .asRuntimeException());
             }
 
             @Override

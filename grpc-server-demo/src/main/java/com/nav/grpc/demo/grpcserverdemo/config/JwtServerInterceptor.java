@@ -1,5 +1,6 @@
-package com.nav.grpc.demo.grpcserverdemo.server;
+package com.nav.grpc.demo.grpcserverdemo.config;
 
+import com.nav.grpc.demo.grpcserverdemo.constant.Constant;
 import io.grpc.Context;
 import io.grpc.Contexts;
 import io.grpc.Metadata;
