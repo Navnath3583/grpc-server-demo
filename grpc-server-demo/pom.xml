@@ -25,6 +25,7 @@
         <protobuf-java-util.version>3.25.5</protobuf-java-util.version>
         <jjwt.version>0.12.6</jjwt.version>
         <grpc-services.version>1.72.0</grpc-services.version>
+        <grpc.version>1.57.2</grpc.version>
     </properties>
     <dependencies>
         <dependency>
@@ -44,7 +45,7 @@
             <version>${protobuf.version}</version>
         </dependency>
         <!-- gRPC Dependencies        -->
-        <dependency>
+        <!--<dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
             <version>${grpc.version}</version>
@@ -60,7 +61,27 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
             <version>${grpc.version}</version>
+        </dependency>-->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
+            <version>${grpc.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <!--<dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-core</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>-->
 
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -71,6 +92,20 @@
             <groupId>com.nav.grpc.demo</groupId>
             <artifactId>grpc-demo-protos</artifactId>
             <version>1.0.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>grpc-netty-shaded</artifactId>
+                    <groupId>io.grpc</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>grpc-protobuf</artifactId>
+                    <groupId>io.grpc</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>grpc-stub</artifactId>
+                    <groupId>io.grpc</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

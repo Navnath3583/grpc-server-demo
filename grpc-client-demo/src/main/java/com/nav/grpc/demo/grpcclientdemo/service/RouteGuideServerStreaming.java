@@ -41,7 +41,7 @@ public class RouteGuideServerStreaming {
                         .setHi(Point.newBuilder().setLatitude(0).setLongitude(0).build()).build();
         Iterator<Feature> features;
         try {
-            routeGuideClientImpl.getAsyncStub().listFeatures(request, new StreamObserver<Feature>() {
+            routeGuideClientImpl.getNextAsyncStub().listFeatures(request, new StreamObserver<Feature>() {
                 @Override
                 public void onNext(Feature feature) {
                     System.out.println("Feature-->" + feature);

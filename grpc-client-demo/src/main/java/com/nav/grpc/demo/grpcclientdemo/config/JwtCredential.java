@@ -45,4 +45,9 @@ public class JwtCredential extends CallCredentials {
             }
         });
     }
+
+    @Override
+    public void thisUsesUnstableApi() {
+
+    }
 }

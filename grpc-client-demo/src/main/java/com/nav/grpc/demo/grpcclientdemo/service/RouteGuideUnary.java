@@ -34,7 +34,7 @@ public class RouteGuideUnary {
         Point point = Point.newBuilder().setLatitude(Integer.parseInt(routeGuideRequest.getLatitude()))
                 .setLongitude(Integer.parseInt(routeGuideRequest.getLongitude()))
                 .build();
-        routeGuideClientImpl.getAsyncStub().withCallCredentials(routeGuideClientImpl.getCredentials())
+        routeGuideClientImpl.getNextAsyncStub().withCallCredentials(routeGuideClientImpl.getCredentials())
                 .getFeature(point, new StreamObserver<Feature>() {
                     @Override
                     public void onNext(Feature feature) {

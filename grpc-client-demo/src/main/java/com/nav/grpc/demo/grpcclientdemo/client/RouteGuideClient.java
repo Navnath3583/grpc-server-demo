@@ -9,7 +9,9 @@ public interface RouteGuideClient {
 
     void startClient() throws IOException;
 
-    RouteGuideGrpc.RouteGuideStub getAsyncStub();
+    RouteGuideGrpc.RouteGuideStub getRouteGuideAsyncStub();
 
     CallCredentials getCredentials();
+    RouteGuideGrpc.RouteGuideStub getNextAsyncStub();
+    RouteGuideGrpc.RouteGuideBlockingStub getNextBlockingStub();
 }

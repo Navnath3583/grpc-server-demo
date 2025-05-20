@@ -6,8 +6,8 @@ import com.nav.grpc.demo.grpcclientdemo.config.JwtCredential;
 import com.nav.grpc.demo.grpcclientdemo.config.ShufflingPickFirstLoadBalancerProvider;
 import com.nav.grpc.demo.msg.RouteGuideGrpc;
 import io.grpc.*;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.NettyChannelBuilder;
 import lombok.Getter;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -21,8 +21,9 @@ import java.util.Map;
 @Profile("custom-load-balancer")
 public class RouteGuideClientCustomLBImpl implements RouteGuideClient {
 
+    private RouteGuideGrpc.RouteGuideStub routeGuideAsyncStub;
+    private RouteGuideGrpc.RouteGuideBlockingStub routeGuideBlockingStub;
     RouteGuideGrpc.RouteGuideStub asyncStub;
-    RouteGuideGrpc.RouteGuideBlockingStub routeGuideBlockingStub;
     String clientId = "default-client";
     CallCredentials credentials;
 
@@ -60,5 +61,15 @@ public class RouteGuideClientCustomLBImpl implements RouteGuideClient {
         this.asyncStub = RouteGuideGrpc.newStub(channel);
         this.routeGuideBlockingStub = RouteGuideGrpc.newBlockingStub(channel);
         System.out.println("Client started");
+    }
+
+    @Override
+    public RouteGuideGrpc.RouteGuideStub getNextAsyncStub() {
+        return asyncStub;
+    }
+
+    @Override
+    public RouteGuideGrpc.RouteGuideBlockingStub getNextBlockingStub() {
+        return this.routeGuideBlockingStub;
     }
 }

@@ -17,7 +17,7 @@ public class RouteGuideClientStreaming {
     public void getFeatures(RouteGuideRequest routeGuideRequest) {
         Point request = Point.newBuilder().setLatitude(0).setLongitude(0).build();
         try {
-            StreamObserver<Point> pointStreamObserver = routeGuideClientImpl.getAsyncStub().recordRoute(new StreamObserver<RouteSummary>() {
+            StreamObserver<Point> pointStreamObserver = routeGuideClientImpl.getNextAsyncStub().recordRoute(new StreamObserver<RouteSummary>() {
                 @Override
                 public void onNext(RouteSummary routeSummary) {
                     System.out.println("Route Summary-->" + routeSummary);

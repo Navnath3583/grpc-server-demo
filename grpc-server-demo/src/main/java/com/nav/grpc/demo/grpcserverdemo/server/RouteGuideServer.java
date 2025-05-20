@@ -3,6 +3,7 @@ package com.nav.grpc.demo.grpcserverdemo.server;
 import com.nav.grpc.demo.grpcserverdemo.service.RouteGuideService;
 import io.grpc.*;
 import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.HealthStatusManager;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,8 @@ public class RouteGuideServer {
                 .build();
 
         HealthStatusManager healthStatusManager = new HealthStatusManager();
-        Server server = Grpc.newServerBuilderForPort(this.serverPort, serverCredentials)
+
+        Server server = NettyServerBuilder.forPort(this.serverPort, serverCredentials)
                 .addService(routeGuideService)
                 .addService(ProtoReflectionServiceV1.newInstance())
                 .addService(healthStatusManager.getHealthService())

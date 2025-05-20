@@ -127,25 +127,15 @@ public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
 
     @Override
     public StreamObserver<RouteNote> routeChat(StreamObserver<RouteNote> responseObserver) {
-        ServerCallStreamObserver serverCallStreamObserver = (ServerCallStreamObserver) responseObserver;
-        serverCallStreamObserver.setOnCancelHandler(() -> {
-            System.out.println("BiDi RPC Cancelled");
-        });
+        //testOnCacelHandler((ServerCallStreamObserver) responseObserver);
         return new StreamObserver<RouteNote>() {
             @Override
             public void onNext(RouteNote routeNote) {
                 System.out.println("<------------- CLient sent the request --->");
-                List<RouteNote> notes = getOrCreateNotes(routeNote.getLocation());
-                // Respond with all previous notes at this location.
                 responseObserver.onNext(RouteNote.newBuilder()
                         .setMessage("Server Response")
                         .setLocation(Point.newBuilder().setLatitude(10)
                                 .setLongitude(10).build()).build());
-                /*for (RouteNote prevNote : notes.toArray(new RouteNote[0])) {
-                    responseObserver.onNext(prevNote);
-                }*/
-                // Now add the new note to the list
-                notes.add(routeNote);
             }
 
             @Override
@@ -156,10 +146,17 @@ public class RouteGuideService extends RouteGuideGrpc.RouteGuideImplBase {
 
             @Override
             public void onCompleted() {
-                responseObserver.onCompleted();
                 System.out.println("<----------Client Finished RouteChat---------->");
+                responseObserver.onCompleted();
             }
         };
+    }
+
+    private static void testOnCacelHandler(ServerCallStreamObserver responseObserver) {
+        ServerCallStreamObserver serverCallStreamObserver = responseObserver;
+        serverCallStreamObserver.setOnCancelHandler(() -> {
+            System.out.println("BiDi RPC Cancelled");
+        });
     }
 
     private List<RouteNote> getOrCreateNotes(Point location) {
