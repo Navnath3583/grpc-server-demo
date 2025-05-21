@@ -6,6 +6,7 @@ import com.nav.grpc.demo.msg.RouteGuideGrpc;
 import io.grpc.*;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyChannelBuilder;
+import io.netty.handler.ssl.SslContext;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -44,17 +45,17 @@ public class RouteGuideClientImpl implements RouteGuideClient {
         listOfAsyncStubs = new ArrayList<>();
         NameResolverRegistry.getDefaultRegistry().register(new RouteGuideNameResolverProvider());
         String target = "example:///lb.example.grpc.io";
+        SslContext clientSslContext = GrpcSslContexts.forClient()
+                .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
+                /*.keyManager(ResourceUtils.getFile("classpath:route_guide/client.pem"),
+                        ResourceUtils.getFile("classpath:route_guide/client.key"))*/
+                .build();
         IntStream.range(0, this.collectionPool).mapToObj(index -> {
             try {
                 return NettyChannelBuilder
                         .forTarget(target)
                         //.usePlaintext()
-                        .sslContext(
-                                GrpcSslContexts.forClient()
-                                        .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
-                                        .keyManager(ResourceUtils.getFile("classpath:route_guide/client.pem"),
-                                                ResourceUtils.getFile("classpath:route_guide/client.key"))
-                                        .build())
+                        .sslContext(clientSslContext)
                         // Change hostname to match certificate
                         .overrideAuthority("192.168.1.3")
                         .defaultLoadBalancingPolicy("round_robin")
@@ -71,12 +72,7 @@ public class RouteGuideClientImpl implements RouteGuideClient {
         ManagedChannel channel = NettyChannelBuilder
                 .forTarget(target)
                 //.usePlaintext()
-                .sslContext(
-                        GrpcSslContexts.forClient()
-                                .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
-                                .keyManager(ResourceUtils.getFile("classpath:route_guide/client.pem"),
-                                        ResourceUtils.getFile("classpath:route_guide/client.key"))
-                                .build())
+                .sslContext(clientSslContext)
                 // Change hostname to match certificate
                 .overrideAuthority("192.168.1.3")
                 .defaultLoadBalancingPolicy("round_robin")

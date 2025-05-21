@@ -3,9 +3,12 @@ package com.nav.grpc.demo.grpcserverdemo.server;
 import com.nav.grpc.demo.grpcserverdemo.service.RouteGuideService;
 import io.grpc.*;
 import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.HealthStatusManager;
 import io.grpc.protobuf.services.ProtoReflectionServiceV1;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.SslContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,16 +28,22 @@ public class RouteGuideServer {
     private RouteGuideService routeGuideService;
 
     public void start() throws IOException, InterruptedException {
-        ServerCredentials serverCredentials = TlsServerCredentials.newBuilder()
+        /*ServerCredentials serverCredentials = TlsServerCredentials.newBuilder()
                 .keyManager(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
                         ResourceUtils.getFile("classpath:route_guide/server1.key"))
                 .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
                 .clientAuth(TlsServerCredentials.ClientAuth.REQUIRE)
-                .build();
+                .build();*/
 
         HealthStatusManager healthStatusManager = new HealthStatusManager();
 
-        Server server = NettyServerBuilder.forPort(this.serverPort, serverCredentials)
+        SslContext serverSslContext = GrpcSslContexts.forServer(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
+                        ResourceUtils.getFile("classpath:route_guide/server1.key"))
+                .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
+                .clientAuth(ClientAuth.NONE)
+                .build();
+        Server server = NettyServerBuilder.forPort(this.serverPort)
+                .sslContext(serverSslContext)
                 .addService(routeGuideService)
                 .addService(ProtoReflectionServiceV1.newInstance())
                 .addService(healthStatusManager.getHealthService())
