@@ -2,13 +2,13 @@ package com.nav.grpc.demo.grpcserverdemo.server;
 
 import com.nav.grpc.demo.grpcserverdemo.service.RouteGuideService;
 import io.grpc.*;
-import io.grpc.health.v1.HealthCheckResponse;
-import io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.NettyServerBuilder;
-import io.grpc.protobuf.services.HealthStatusManager;
-import io.grpc.protobuf.services.ProtoReflectionServiceV1;
-import io.netty.handler.ssl.ClientAuth;
-import io.netty.handler.ssl.SslContext;
+//import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.ClientAuth;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+//import io.grpc.protobuf.services.HealthStatusManager;
+//import io.grpc.protobuf.services.ProtoReflectionServiceV1;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,18 +35,18 @@ public class RouteGuideServer {
                 .clientAuth(TlsServerCredentials.ClientAuth.REQUIRE)
                 .build();*/
 
-        HealthStatusManager healthStatusManager = new HealthStatusManager();
+        //HealthStatusManager healthStatusManager = new HealthStatusManager();
 
         SslContext serverSslContext = GrpcSslContexts.forServer(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
                         ResourceUtils.getFile("classpath:route_guide/server1.key"))
                 .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
                 .clientAuth(ClientAuth.NONE)
                 .build();
-        Server server = NettyServerBuilder.forPort(this.serverPort)
-                .sslContext(serverSslContext)
+        Server server = NettyServerBuilder.forPort(this.serverPort, InsecureServerCredentials.create())
+                //.sslContext(serverSslContext)
                 .addService(routeGuideService)
-                .addService(ProtoReflectionServiceV1.newInstance())
-                .addService(healthStatusManager.getHealthService())
+                //.addService(ProtoReflectionServiceV1.newInstance())
+                //.addService(healthStatusManager.getHealthService())
                 //.intercept(new JwtServerInterceptor())
                 .build()
                 .start();
@@ -66,7 +66,7 @@ public class RouteGuideServer {
             }
             server.shutdownNow();
         }));
-        healthStatusManager.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
+        //healthStatusManager.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
         server.awaitTermination();
     }
 }

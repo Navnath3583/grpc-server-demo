@@ -4,9 +4,9 @@ import com.nav.grpc.demo.grpcclientdemo.config.RouteGuideNameResolverProvider;
 import com.nav.grpc.demo.grpcclientdemo.config.JwtCredential;
 import com.nav.grpc.demo.msg.RouteGuideGrpc;
 import io.grpc.*;
-import io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.NettyChannelBuilder;
-import io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -54,8 +54,8 @@ public class RouteGuideClientImpl implements RouteGuideClient {
             try {
                 return NettyChannelBuilder
                         .forTarget(target)
-                        //.usePlaintext()
-                        .sslContext(clientSslContext)
+                        .usePlaintext()
+                        //.sslContext(clientSslContext)
                         // Change hostname to match certificate
                         .overrideAuthority("192.168.1.3")
                         .defaultLoadBalancingPolicy("round_robin")
