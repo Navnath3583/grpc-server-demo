@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
 public class RouteGuideClientImpl implements RouteGuideClient {
 
     private static String clientId = "default-client";
-    @Value("${grpc.connection.pool:1}")
+    @Value("${grpc.connection.pool:2}")
     private int collectionPool;
     private RouteGuideGrpc.RouteGuideStub routeGuideAsyncStub;
     private RouteGuideGrpc.RouteGuideBlockingStub routeGuideBlockingStub;

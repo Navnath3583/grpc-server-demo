@@ -17,7 +17,7 @@ public class RouteGuideNameResolver extends NameResolver {
 
     public static final String exampleServiceName = "lb.example.grpc.io";
 
-    static private final int[] SERVER_PORTS = {50051, 50052, 50053};
+    static private final int[] SERVER_PORTS = {50051, 50052, 50053, 50054};
     private Listener2 listener;
 
     private final URI uri;

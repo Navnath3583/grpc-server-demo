@@ -28,28 +28,8 @@ public class RouteGuideServer {
     private RouteGuideService routeGuideService;
 
     public void start() throws IOException, InterruptedException {
-        /*ServerCredentials serverCredentials = TlsServerCredentials.newBuilder()
-                .keyManager(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
-                        ResourceUtils.getFile("classpath:route_guide/server1.key"))
-                .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
-                .clientAuth(TlsServerCredentials.ClientAuth.REQUIRE)
-                .build();*/
-
-        //HealthStatusManager healthStatusManager = new HealthStatusManager();
-
-        SslContext serverSslContext = GrpcSslContexts.forServer(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
-                        ResourceUtils.getFile("classpath:route_guide/server1.key"))
-                .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
-                .clientAuth(ClientAuth.NONE)
-                .build();
-        Server server = NettyServerBuilder.forPort(this.serverPort, InsecureServerCredentials.create())
-                //.sslContext(serverSslContext)
-                .addService(routeGuideService)
-                //.addService(ProtoReflectionServiceV1.newInstance())
-                //.addService(healthStatusManager.getHealthService())
-                //.intercept(new JwtServerInterceptor())
-                .build()
-                .start();
+        //Server server = simpleServer();
+        Server server = serverWithKeepAliveSupport();
         log.info("Server started, listening on " + this.serverPort);
 
         /*
@@ -68,5 +48,55 @@ public class RouteGuideServer {
         }));
         //healthStatusManager.setStatus("", HealthCheckResponse.ServingStatus.SERVING);
         server.awaitTermination();
+    }
+
+    private Server simpleServer() throws IOException {
+    /*ServerCredentials serverCredentials = TlsServerCredentials.newBuilder()
+            .keyManager(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
+                    ResourceUtils.getFile("classpath:route_guide/server1.key"))
+            .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
+            .clientAuth(TlsServerCredentials.ClientAuth.REQUIRE)
+            .build();*/
+
+        //HealthStatusManager healthStatusManager = new HealthStatusManager();
+
+        SslContext serverSslContext = GrpcSslContexts.forServer(ResourceUtils.getFile("classpath:route_guide/server1.pem"),
+                        ResourceUtils.getFile("classpath:route_guide/server1.key"))
+                .trustManager(ResourceUtils.getFile("classpath:route_guide/ca.pem"))
+                .clientAuth(ClientAuth.NONE)
+                .build();
+        Server server = NettyServerBuilder.forPort(this.serverPort, InsecureServerCredentials.create())
+                //.sslContext(serverSslContext)
+                .addService(routeGuideService)
+                //.addService(ProtoReflectionServiceV1.newInstance())
+                //.addService(healthStatusManager.getHealthService())
+                //.intercept(new JwtServerInterceptor())
+                .build()
+                .start();
+        return server;
+    }
+
+    /*Start a server with the following configurations (demo only, you should set more appropriate
+    values based on your real environment):
+    keepAliveTime: Ping the client if it is idle for 5 seconds to ensure the connection is
+    still active. Set to an appropriate value in reality, e.g. in minutes.
+    keepAliveTimeout: Wait 1 second for the ping ack before assuming the connection is dead.
+    Set to an appropriate value in reality, e.g. (10, TimeUnit.SECONDS).
+    permitKeepAliveTime: If a client pings more than once every 5 seconds, terminate the
+    connection.
+    permitKeepAliveWithoutCalls: Allow pings even when there are no active streams.
+    maxConnectionIdle: If a client is idle for 15 seconds, send a GOAWAY.
+    maxConnectionAge: If any connection is alive for more than 30 seconds, send a GOAWAY.
+    maxConnectionAgeGrace: Allow 5 seconds for pending RPCs to complete before forcibly closing
+    connections.
+    Use JAVA_OPTS=-Djava.util.logging.config.file=logging.properties to see keep alive ping
+    frames.
+    More details see: https://github.com/grpc/proposal/blob/master/A9-server-side-conn-mgt.md*/
+    private Server serverWithKeepAliveSupport() throws IOException {
+        return NettyServerBuilder.forPort(this.serverPort, InsecureServerCredentials.create())
+                .addService(routeGuideService)
+                .keepAliveTime(30, TimeUnit.SECONDS)
+                .build()
+                .start();
     }
 }
